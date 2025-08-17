@@ -1,5 +1,4 @@
-import puter from 'puter';
-
+// Interface definitions
 export interface TravelDay {
   day: number;
   date: string;
@@ -46,6 +45,81 @@ export interface TravelPreferences {
   notes: string;
 }
 
+// Temporary mock implementation until puter import is resolved
+const mockPuter = {
+  ai: {
+    chat: async function* (prompt: string, options: any, streamOptions: any) {
+      // Mock streaming response for development
+      const mockResponse = `{
+        "destination": "Sample Destination",
+        "startDate": "2024-01-01",
+        "endDate": "2024-01-03",
+        "overview": "A wonderful 3-day journey through Sample Destination with carefully curated experiences.",
+        "totalBudget": "$300-500 total",
+        "tips": [
+          "Book accommodations in advance",
+          "Try local street food",
+          "Carry a portable charger"
+        ],
+        "days": [
+          {
+            "day": 1,
+            "date": "2024-01-01",
+            "title": "Arrival & City Center",
+            "morning": [
+              {
+                "id": "morning-1-1",
+                "name": "Airport Transfer",
+                "description": "Take metro or taxi from airport to city center",
+                "location": "Main Airport to City Center",
+                "duration": "45 minutes",
+                "cost": "$15-25",
+                "category": "transportation",
+                "openingHours": "24/7",
+                "tips": "Metro is cheaper and faster during rush hour"
+              }
+            ],
+            "afternoon": [
+              {
+                "id": "afternoon-1-1",
+                "name": "Historic Downtown Walk",
+                "description": "Explore the historic city center and main square",
+                "location": "Main Square Area",
+                "duration": "2-3 hours",
+                "cost": "Free",
+                "category": "sightseeing",
+                "openingHours": "All day",
+                "tips": "Best lighting for photos around 4 PM"
+              }
+            ],
+            "evening": [
+              {
+                "id": "evening-1-1",
+                "name": "Welcome Dinner",
+                "description": "Try local cuisine at a traditional restaurant",
+                "location": "Old Town Restaurant District",
+                "duration": "2 hours",
+                "cost": "$25-40",
+                "category": "dining",
+                "openingHours": "6:00 PM - 11:00 PM",
+                "tips": "Make reservations for popular spots"
+              }
+            ],
+            "notes": "Take it easy on the first day to adjust to the new environment"
+          }
+        ]
+      }`;
+      
+      // Simulate streaming by yielding chunks
+      const chunks = mockResponse.split(' ');
+      for (let i = 0; i < chunks.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 50)); // Simulate delay
+        yield { text: chunks[i] + ' ' };
+      }
+    }
+  }
+};
+
 class AITravelService {
   private async streamItineraryGeneration(
     preferences: TravelPreferences,
@@ -54,7 +128,8 @@ class AITravelService {
     const prompt = this.buildItineraryPrompt(preferences);
     
     try {
-      const response = await puter.ai.chat(
+      // TODO: Replace with actual puter.ai.chat when import is fixed
+      const response = mockPuter.ai.chat(
         prompt,
         { model: "gpt-4o" },
         { stream: true }
