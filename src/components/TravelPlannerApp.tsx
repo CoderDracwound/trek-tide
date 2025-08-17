@@ -31,16 +31,6 @@ export default function TravelPlannerApp() {
   const { toast } = useToast();
 
   const handleGenerateItinerary = async (preferences: TravelPreferences) => {
-    // Puter.js doesn't require API keys according to documentation
-    if (!aiTravelService.hasApiKey()) {
-      toast({
-        title: "Puter.js Loading",
-        description: "Please wait while AI services initialize...",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setCurrentStep('generating');
     setGenerationProgress('');
     
@@ -49,7 +39,7 @@ export default function TravelPlannerApp() {
     try {
       const result = await aiTravelService.generateItinerary(
         preferences,
-        (chunk) => setGenerationProgress(prev => prev + chunk)
+        (chunk) => setGenerationProgress(chunk)
       );
       
       setItinerary(result);
@@ -220,11 +210,10 @@ export default function TravelPlannerApp() {
             </div>
             
             {generationProgress && (
-              <div className="bg-muted/30 border border-border rounded-lg p-4 text-left">
-                <p className="text-sm text-muted-foreground mb-2">Generation Progress:</p>
-                <div className="text-sm whitespace-pre-wrap max-h-40 overflow-y-auto">
+              <div className="bg-muted/30 border border-border rounded-lg p-4 text-center">
+                <p className="text-sm text-muted-foreground">
                   {generationProgress}
-                </div>
+                </p>
               </div>
             )}
             
@@ -250,10 +239,6 @@ export default function TravelPlannerApp() {
             Plan New Trip
           </Button>
           
-          <Button variant="ghost" onClick={() => setApiKeyDialogOpen(true)}>
-            <Settings className="w-4 h-4 mr-2" />
-            API Settings
-          </Button>
         </div>
       </div>
 

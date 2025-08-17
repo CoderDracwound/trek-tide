@@ -141,9 +141,9 @@ class AITravelService {
     const cachedResult = this.cache.get(cacheKey);
     if (cachedResult) {
       console.log('Using cached result');
-      // Simulate streaming for cached results
+      // Return parsed JSON directly for cached results
       const response = JSON.stringify(cachedResult);
-      setTimeout(() => onUpdate(response), 100);
+      onUpdate('Generation complete!');
       return response;
     }
 
@@ -156,26 +156,22 @@ class AITravelService {
       }
 
       console.log('Calling Puter AI...');
+      onUpdate('Connecting to AI...');
       
-      // Use Puter AI chat function - according to docs, no streaming but we'll simulate it
+      // Use Puter AI chat function
       const response = await window.puter.ai.chat(prompt, { model: "gpt-4.1" });
       
       console.log('Puter AI response received:', response.length, 'characters');
-      
-      // Simulate streaming by breaking response into chunks
-      const chunks = response.split(' ');
-      for (let i = 0; i < chunks.length; i++) {
-        onUpdate(chunks[i] + ' ');
-        // Small delay to simulate streaming
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
+      onUpdate('Processing response...');
       
       // Cache the result
       try {
         const parsedResponse = JSON.parse(response);
         this.cache.set(cacheKey, parsedResponse);
+        onUpdate('Generation complete!');
       } catch (e) {
         console.warn('Could not parse AI response for caching');
+        onUpdate('Finalizing itinerary...');
       }
       
       return response;
@@ -184,17 +180,80 @@ class AITravelService {
       
       // Fallback to mock response for development
       console.log('Falling back to mock response...');
+      onUpdate('Using fallback data...');
       return this.getMockItinerary(preferences, onUpdate);
     }
   }
 
   private async getMockItinerary(preferences: TravelPreferences, onUpdate: (chunk: string) => void): Promise<string> {
-    const mockResponse = `{
-      "destination": "${preferences.destination}",
-      "startDate": "${preferences.startDate}",
-      "endDate": "${preferences.endDate}",
-      "overview": "A wonderful journey through ${preferences.destination} with carefully curated experiences tailored to your ${preferences.interests.join(', ')} interests.",
-      "totalBudget": "₹15,000-25,000 total",
+    // Calculate number of days for the trip
+    const startDate = new Date(preferences.startDate);
+    const endDate = new Date(preferences.endDate);
+    const tripDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    // Generate days array
+    const days = [];
+    for (let i = 0; i < tripDays; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      
+      days.push({
+        "day": i + 1,
+        "date": currentDate.toISOString().split('T')[0],
+        "title": i === 0 ? "Arrival & City Exploration" : 
+                i === tripDays - 1 ? "Final Exploration & Departure" : 
+                `${preferences.destination} Adventure Day ${i + 1}`,
+        "morning": [
+          {
+            "id": `morning-${i + 1}-1`,
+            "name": i === 0 ? "Airport Transfer" : "Morning Activity",
+            "description": i === 0 ? "Take airport express metro or pre-paid taxi to city center" : `Explore ${preferences.destination} in the morning`,
+            "location": i === 0 ? "Airport to City Center" : `${preferences.destination} Morning Location`,
+            "duration": "2-3 hours",
+            "cost": "₹250-800",
+            "category": i === 0 ? "transportation" : "sightseeing",
+            "openingHours": "9:00 AM - 12:00 PM",
+            "tips": "Start early to avoid crowds and heat."
+          }
+        ],
+        "afternoon": [
+          {
+            "id": `afternoon-${i + 1}-1`,
+            "name": "Afternoon Exploration",
+            "description": `Discover ${preferences.destination} attractions and local culture`,
+            "location": `${preferences.destination} Central Area`,
+            "duration": "3-4 hours",
+            "cost": "₹500-1,500",
+            "category": "sightseeing",
+            "openingHours": "12:00 PM - 6:00 PM",
+            "tips": "Take breaks and stay hydrated."
+          }
+        ],
+        "evening": [
+          {
+            "id": `evening-${i + 1}-1`,
+            "name": i === tripDays - 1 ? "Farewell Dinner" : "Evening Experience",
+            "description": i === tripDays - 1 ? "Final authentic meal and reflection on the journey" : "Experience local nightlife and cuisine",
+            "location": `${preferences.destination} Restaurant District`,
+            "duration": "2-3 hours",
+            "cost": "₹800-2,000",
+            "category": "dining",
+            "openingHours": "6:00 PM - 11:00 PM",
+            "tips": "Make reservations for popular restaurants."
+          }
+        ],
+        "notes": i === 0 ? "Take it easy on the first day to adjust to the new environment." : 
+                i === tripDays - 1 ? "Pack early and confirm departure arrangements." : 
+                "Enjoy the local experiences and stay flexible with timing."
+      });
+    }
+
+    const mockResponse = JSON.stringify({
+      "destination": preferences.destination,
+      "startDate": preferences.startDate,
+      "endDate": preferences.endDate,
+      "overview": `A wonderful ${tripDays}-day journey through ${preferences.destination} with carefully curated experiences tailored to your ${preferences.interests.join(', ')} interests.`,
+      "totalBudget": `₹${(tripDays * 2000)}-${(tripDays * 4000)} total`,
       "tips": [
         "Book accommodations in advance for better rates",
         "Try local street food for authentic experiences",
@@ -202,72 +261,12 @@ class AITravelService {
         "Download offline maps before traveling",
         "Keep emergency contacts handy"
       ],
-      "days": [
-        {
-          "day": 1,
-          "date": "${preferences.startDate}",
-          "title": "Arrival & City Exploration",
-          "morning": [
-            {
-              "id": "morning-1-1",
-              "name": "Airport Transfer",
-              "description": "Take airport express metro or pre-paid taxi to city center",
-              "location": "Airport to City Center",
-              "duration": "45-60 minutes",
-              "cost": "₹250-500",
-              "category": "transportation",
-              "openingHours": "24/7",
-              "tips": "Metro is cheaper and faster during peak hours. Book airport pickup in advance for convenience."
-            }
-          ],
-          "afternoon": [
-            {
-              "id": "afternoon-1-1",
-              "name": "Historic City Center Walk",
-              "description": "Explore the main landmarks and get oriented with the city layout",
-              "location": "Central Business District",
-              "duration": "2-3 hours",
-              "cost": "Free",
-              "category": "sightseeing",
-              "openingHours": "All day",
-              "tips": "Best lighting for photos during golden hour. Wear comfortable walking shoes."
-            },
-            {
-              "id": "afternoon-1-2",
-              "name": "Local Market Visit",
-              "description": "Experience local culture and shop for souvenirs",
-              "location": "Main Market Area",
-              "duration": "1-2 hours",
-              "cost": "₹500-1,000",
-              "category": "shopping",
-              "openingHours": "10:00 AM - 8:00 PM",
-              "tips": "Bargaining is expected. Keep small denominations handy."
-            }
-          ],
-          "evening": [
-            {
-              "id": "evening-1-1",
-              "name": "Welcome Dinner",
-              "description": "Try authentic local cuisine at a highly-rated restaurant",
-              "location": "Traditional Restaurant District",
-              "duration": "2 hours",
-              "cost": "₹800-1,500",
-              "category": "dining",
-              "openingHours": "6:00 PM - 11:00 PM",
-              "tips": "Make reservations for popular restaurants. Ask for recommendations from locals."
-            }
-          ],
-          "notes": "Take it easy on the first day to adjust to the new environment and recover from travel fatigue."
-        }
-      ]
-    }`;
+      "days": days
+    });
     
-    // Simulate streaming by yielding chunks
-    const chunks = mockResponse.split(' ');
-    for (let i = 0; i < chunks.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 20));
-      onUpdate(chunks[i] + ' ');
-    }
+    onUpdate('Generating itinerary...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    onUpdate('Almost done...');
     
     return mockResponse;
   }
@@ -375,7 +374,7 @@ ${JSON.stringify(itinerary, null, 2)}
 USER REQUEST:
 ${refinementRequest}
 
-Return the modified itinerary in the exact same JSON format. Only change what the user requested, keep everything else the same. Ensure all costs are in Indian Rupees (₹).`;
+Return ONLY valid JSON in the exact same format. Only change what the user requested, keep everything else the same. Ensure all costs are in Indian Rupees (₹).`;
 
     const streamUpdate = onUpdate || (() => {});
     
@@ -384,14 +383,9 @@ Return the modified itinerary in the exact same JSON format. Only change what th
         throw new Error('Puter.js not available');
       }
 
+      streamUpdate('Processing your request...');
       const response = await window.puter.ai.chat(prompt, { model: "gpt-4.1" });
-      
-      // Simulate streaming
-      const chunks = response.split(' ');
-      for (let i = 0; i < chunks.length; i++) {
-        streamUpdate(chunks[i] + ' ');
-        await new Promise(resolve => setTimeout(resolve, 10));
-      }
+      streamUpdate('Updating itinerary...');
       
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : response;
