@@ -190,19 +190,23 @@ export default function TravelIntakeForm({ onSubmit }: TravelIntakeFormProps) {
                 {INTERESTS.map((interest) => (
                   <div
                     key={interest.id}
-                    className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all neo-shadow-hover ${
+                    className={`flex items-center space-x-3 p-3 border-2 rounded-lg transition-all neo-shadow-hover ${
                       preferences.interests.includes(interest.id)
                         ? "border-accent bg-accent/10"
                         : "border-border bg-card hover:border-accent/50"
                     }`}
-                    onClick={() => toggleInterest(interest.id)}
                   >
                     <Checkbox
                       checked={preferences.interests.includes(interest.id)}
-                      onChange={() => toggleInterest(interest.id)}
+                      onCheckedChange={() => toggleInterest(interest.id)}
                     />
                     <span className="text-xl">{interest.emoji}</span>
-                    <span className="text-sm font-medium">{interest.label}</span>
+                    <span 
+                      className="text-sm font-medium cursor-pointer flex-1"
+                      onClick={() => toggleInterest(interest.id)}
+                    >
+                      {interest.label}
+                    </span>
                   </div>
                 ))}
               </div>

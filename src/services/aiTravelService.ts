@@ -1,5 +1,4 @@
-// @ts-ignore
-import * as puter from 'puter';
+import puter from 'puter';
 
 export interface TravelDay {
   day: number;
