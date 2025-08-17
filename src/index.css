@@ -2,41 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Neobrutalism × Material Design System
+All colors MUST be HSL. Bold blocks, visible grid, playful shadows balanced by Material spacing.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Base colors - High contrast, accessible pairs */
+    --background: 45 100% 96%;
+    --foreground: 240 10% 4%;
 
+    /* Card system - Chunky brutalist feel */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 240 10% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 4%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Bold orange for CTA */
+    --primary: 25 95% 55%;
+    --primary-foreground: 0 0% 100%;
+    --primary-shadow: 25 95% 35%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Cool blue-gray */
+    --secondary: 215 25% 85%;
+    --secondary-foreground: 240 10% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Subtle backgrounds */
+    --muted: 45 20% 92%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Vibrant purple */
+    --accent: 270 70% 60%;
+    --accent-foreground: 0 0% 100%;
+    --accent-shadow: 270 70% 40%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success - Fresh green */
+    --success: 145 70% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Warning - Warm yellow */
+    --warning: 45 95% 55%;
+    --warning-foreground: 240 10% 15%;
 
-    --radius: 0.5rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs - Chunky feel */
+    --border: 240 10% 80%;
+    --input: 0 0% 100%;
+    --ring: 25 95% 55%;
+
+    /* Neobrutalist radius - chunky but rounded */
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +74,48 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode - Bold contrast */
+    --background: 240 15% 8%;
+    --foreground: 45 100% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 240 10% 12%;
+    --card-foreground: 45 100% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 45 100% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Primary stays bold orange but lighter */
+    --primary: 25 95% 65%;
+    --primary-foreground: 240 15% 8%;
+    --primary-shadow: 25 95% 45%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary darker */
+    --secondary: 215 15% 20%;
+    --secondary-foreground: 45 100% 96%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Muted darker */
+    --muted: 240 8% 15%;
+    --muted-foreground: 240 5% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Accent lighter in dark */
+    --accent: 270 70% 70%;
+    --accent-foreground: 240 15% 8%;
+    --accent-shadow: 270 70% 50%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success lighter */
+    --success: 145 70% 55%;
+    --success-foreground: 240 15% 8%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Warning adjusted */
+    --warning: 45 95% 65%;
+    --warning-foreground: 240 15% 8%;
+
+    --destructive: 0 84% 70%;
+    --destructive-foreground: 240 15% 8%;
+
+    --border: 240 10% 25%;
+    --input: 240 10% 12%;
+    --ring: 25 95% 65%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +133,47 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  /* Neobrutalist shadows and effects */
+  .neo-shadow {
+    box-shadow: 4px 4px 0px hsl(var(--primary-shadow));
+  }
+  
+  .neo-shadow-accent {
+    box-shadow: 4px 4px 0px hsl(var(--accent-shadow));
+  }
+  
+  .neo-shadow-hover {
+    transition: all 0.2s ease;
+  }
+  
+  .neo-shadow-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px hsl(var(--primary-shadow));
+  }
+
+  /* Grid patterns for brutalist feel */
+  .grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Bold typography hierarchy */
+  .heading-xl {
+    @apply text-4xl md:text-6xl font-black tracking-tight;
+  }
+  
+  .heading-lg {
+    @apply text-2xl md:text-4xl font-bold tracking-tight;
+  }
+  
+  .heading-md {
+    @apply text-xl md:text-2xl font-bold tracking-tight;
   }
 }
