@@ -1,7 +1,7 @@
-import TravelIntakeForm from "@/components/TravelIntakeForm";
+import TravelPlannerApp from "@/components/TravelPlannerApp";
 
 const Index = () => {
-  return <TravelIntakeForm />;
+  return <TravelPlannerApp />;
 };
 
 export default Index;

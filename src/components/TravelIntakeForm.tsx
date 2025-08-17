@@ -6,16 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MapPin, Calendar, DollarSign, Clock, Heart, Users } from "lucide-react";
+import { TravelPreferences } from "@/services/aiTravelService";
 
-interface TravelPreferences {
-  destination: string;
-  startDate: string;
-  endDate: string;
-  budget: string;
-  pace: string;
-  interests: string[];
-  groupSize: string;
-  notes: string;
+interface TravelIntakeFormProps {
+  onSubmit: (preferences: TravelPreferences) => void;
 }
 
 const INTERESTS = [
@@ -41,7 +35,7 @@ const PACE_OPTIONS = [
   { value: "packed", label: "Packed", description: "5+ activities per day" },
 ];
 
-export default function TravelIntakeForm() {
+export default function TravelIntakeForm({ onSubmit }: TravelIntakeFormProps) {
   const [preferences, setPreferences] = useState<TravelPreferences>({
     destination: "",
     startDate: "",
@@ -57,13 +51,12 @@ export default function TravelIntakeForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsGenerating(true);
+    if (!preferences.destination || !preferences.startDate || !preferences.endDate) {
+      return;
+    }
     
-    // Simulate AI generation
-    setTimeout(() => {
-      setIsGenerating(false);
-      console.log("Generated itinerary for:", preferences);
-    }, 3000);
+    setIsGenerating(true);
+    onSubmit(preferences);
   };
 
   const toggleInterest = (interestId: string) => {
