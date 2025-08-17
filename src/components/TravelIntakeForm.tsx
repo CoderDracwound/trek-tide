@@ -24,9 +24,9 @@ const INTERESTS = [
 ];
 
 const BUDGET_OPTIONS = [
-  { value: "budget", label: "Budget", description: "Under $100/day" },
-  { value: "mid-range", label: "Mid-Range", description: "$100-250/day" },
-  { value: "luxury", label: "Luxury", description: "$250+/day" },
+  { value: "budget", label: "Budget", description: "Under ₹8,000/day" },
+  { value: "mid-range", label: "Mid-Range", description: "₹8,000-20,000/day" },
+  { value: "luxury", label: "Luxury", description: "₹20,000+/day" },
 ];
 
 const PACE_OPTIONS = [

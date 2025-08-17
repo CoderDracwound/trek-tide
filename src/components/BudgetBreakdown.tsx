@@ -35,10 +35,10 @@ interface BudgetCategory {
 const calculateBudgetBreakdown = (itinerary: TravelItinerary): BudgetCategory[] => {
   const days = itinerary.days.length;
   
-  // Extract budget range (simplified parsing)
-  const budgetMatch = itinerary.totalBudget.match(/\$(\d+)-(\d+)/);
-  const totalBudgetMin = budgetMatch ? parseInt(budgetMatch[1]) : 300;
-  const totalBudgetMax = budgetMatch ? parseInt(budgetMatch[2]) : 500;
+  // Extract budget range for INR (₹15,000-25,000 format)
+  const budgetMatch = itinerary.totalBudget.match(/₹([\d,]+)-([\d,]+)/);
+  const totalBudgetMin = budgetMatch ? parseInt(budgetMatch[1].replace(/,/g, '')) : 15000;
+  const totalBudgetMax = budgetMatch ? parseInt(budgetMatch[2].replace(/,/g, '')) : 25000;
   const avgBudget = (totalBudgetMin + totalBudgetMax) / 2;
 
   // Count activities by category to estimate spending
@@ -131,7 +131,7 @@ export default function BudgetBreakdown({ itinerary, isOpen, onClose }: BudgetBr
                   </p>
                 </div>
                 <Badge variant="default" className="text-lg px-3 py-1">
-                  ${totalEstimated}
+                  ₹{totalEstimated.toLocaleString('en-IN')}
                 </Badge>
               </div>
               
@@ -142,7 +142,7 @@ export default function BudgetBreakdown({ itinerary, isOpen, onClose }: BudgetBr
                 </div>
                 <div>
                   <span className="text-muted-foreground">Daily average:</span>
-                  <span className="ml-2 font-medium">${dailyAverage}</span>
+                  <span className="ml-2 font-medium">₹{dailyAverage.toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </Card>
@@ -169,7 +169,7 @@ export default function BudgetBreakdown({ itinerary, isOpen, onClose }: BudgetBr
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-lg">${category.estimated}</div>
+                        <div className="font-bold text-lg">₹{category.estimated.toLocaleString('en-IN')}</div>
                         <div className="text-sm text-muted-foreground">{percentage}%</div>
                       </div>
                     </div>

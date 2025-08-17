@@ -3,10 +3,11 @@ import TravelIntakeForm from "@/components/TravelIntakeForm";
 import ItineraryDisplay from "@/components/ItineraryDisplay";
 import ItineraryChat from "@/components/ItineraryChat";
 import ActivityEditDialog from "@/components/ActivityEditDialog";
+import PuterAPIKeySetup from "@/components/PuterAPIKeySetup";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Settings } from "lucide-react";
 import { 
   TravelItinerary, 
   TravelPreferences, 
@@ -19,6 +20,7 @@ export default function TravelPlannerApp() {
   const [itinerary, setItinerary] = useState<TravelItinerary | null>(null);
   const [generationProgress, setGenerationProgress] = useState('');
   const [isRefining, setIsRefining] = useState(false);
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<{
     activity: Activity;
     dayIndex: number;
@@ -29,6 +31,12 @@ export default function TravelPlannerApp() {
   const { toast } = useToast();
 
   const handleGenerateItinerary = async (preferences: TravelPreferences) => {
+    // Check if API key is set
+    if (!aiTravelService.hasApiKey()) {
+      setApiKeyDialogOpen(true);
+      return;
+    }
+
     setCurrentStep('generating');
     setGenerationProgress('');
     
@@ -45,11 +53,11 @@ export default function TravelPlannerApp() {
         title: "Itinerary Generated! 🎉",
         description: `Your ${preferences.destination} adventure is ready!`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating itinerary:', error);
       toast({
         title: "Generation Failed",
-        description: "Sorry, we couldn't generate your itinerary. Please try again.",
+        description: error.message || "Sorry, we couldn't generate your itinerary. Please try again.",
         variant: "destructive",
       });
       setCurrentStep('intake');
@@ -74,11 +82,11 @@ export default function TravelPlannerApp() {
         title: "Itinerary Updated! ✨",
         description: "Your changes have been applied successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error refining itinerary:', error);
       toast({
         title: "Update Failed",
-        description: "Sorry, we couldn't update your itinerary. Please try again.",
+        description: error.message || "Sorry, we couldn't update your itinerary. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -172,7 +180,17 @@ export default function TravelPlannerApp() {
     setItinerary(null);
     setGenerationProgress('');
     setIsRefining(false);
-    setEditingActivity(null);
+    setApiKeyDialogOpen(false);
+  };
+
+  const handleApiKeySet = (apiKey: string) => {
+    aiTravelService.setApiKey(apiKey);
+    setApiKeyDialogOpen(false);
+    
+    toast({
+      title: "API Key Configured! 🔑",
+      description: "You can now generate AI-powered itineraries.",
+    });
   };
 
   if (currentStep === 'intake') {
@@ -220,10 +238,15 @@ export default function TravelPlannerApp() {
     <div className="min-h-screen bg-background">
       {/* Back Button */}
       <div className="bg-card border-b border-border p-4">
-        <div className="container mx-auto">
+        <div className="container mx-auto flex justify-between items-center">
           <Button variant="outline" onClick={handleStartOver}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Plan New Trip
+          </Button>
+          
+          <Button variant="ghost" onClick={() => setApiKeyDialogOpen(true)}>
+            <Settings className="w-4 h-4 mr-2" />
+            API Settings
           </Button>
         </div>
       </div>
@@ -255,7 +278,13 @@ export default function TravelPlannerApp() {
         </div>
       </div>
 
-      {/* Activity Edit Dialog */}
+      {/* Dialogs */}
+      <PuterAPIKeySetup
+        isOpen={apiKeyDialogOpen}
+        onClose={() => setApiKeyDialogOpen(false)}
+        onApiKeySet={handleApiKeySet}
+      />
+
       <ActivityEditDialog
         activity={editingActivity?.activity || null}
         isOpen={!!editingActivity}
