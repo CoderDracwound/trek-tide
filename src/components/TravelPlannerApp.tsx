@@ -31,14 +31,20 @@ export default function TravelPlannerApp() {
   const { toast } = useToast();
 
   const handleGenerateItinerary = async (preferences: TravelPreferences) => {
-    // Check if API key is set
+    // Puter.js doesn't require API keys according to documentation
     if (!aiTravelService.hasApiKey()) {
-      setApiKeyDialogOpen(true);
+      toast({
+        title: "Puter.js Loading",
+        description: "Please wait while AI services initialize...",
+        variant: "destructive",
+      });
       return;
     }
 
     setCurrentStep('generating');
     setGenerationProgress('');
+    
+    console.log('Starting itinerary generation...', preferences);
     
     try {
       const result = await aiTravelService.generateItinerary(
@@ -184,12 +190,12 @@ export default function TravelPlannerApp() {
   };
 
   const handleApiKeySet = (apiKey: string) => {
-    aiTravelService.setApiKey(apiKey);
+    // Puter.js doesn't require API keys, this is just for compatibility
     setApiKeyDialogOpen(false);
     
     toast({
-      title: "API Key Configured! 🔑",
-      description: "You can now generate AI-powered itineraries.",
+      title: "Puter.js Ready! 🔑",
+      description: "AI services are now available.",
     });
   };
 

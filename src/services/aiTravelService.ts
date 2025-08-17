@@ -45,6 +45,17 @@ export interface TravelPreferences {
   notes: string;
 }
 
+// Declare global puter object
+declare global {
+  interface Window {
+    puter: {
+      ai: {
+        chat: (prompt: string, options?: { model?: string }) => Promise<string>;
+      };
+    };
+  }
+}
+
 // Cache for storing generated itineraries and common destinations
 class ItineraryCache {
   private cache = new Map<string, any>();
@@ -85,24 +96,21 @@ const POPULAR_DESTINATIONS = [
 
 class AITravelService {
   private cache = new ItineraryCache();
-  private apiKey: string | null = null;
   private rateLimitCount = 0;
   private rateLimitWindow = Date.now();
   private readonly RATE_LIMIT = 10; // 10 requests per minute
   private readonly RATE_WINDOW = 60 * 1000; // 1 minute
 
   constructor() {
-    // Try to load API key from localStorage
-    this.apiKey = localStorage.getItem('puter_api_key');
-  }
-
-  setApiKey(apiKey: string) {
-    this.apiKey = apiKey;
-    localStorage.setItem('puter_api_key', apiKey);
+    // Check if puter is available
+    if (typeof window !== 'undefined' && !window.puter) {
+      console.warn('Puter.js not loaded. Please ensure the script tag is included in your HTML.');
+    }
   }
 
   hasApiKey(): boolean {
-    return !!this.apiKey;
+    // Puter doesn't require API keys according to documentation
+    return typeof window !== 'undefined' && !!window.puter;
   }
 
   private checkRateLimit(): boolean {
@@ -126,10 +134,6 @@ class AITravelService {
     preferences: TravelPreferences,
     onUpdate: (chunk: string) => void
   ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('API key not set. Please configure your Puter AI API key.');
-    }
-
     this.checkRateLimit();
 
     // Check cache first
@@ -138,40 +142,43 @@ class AITravelService {
     if (cachedResult) {
       console.log('Using cached result');
       // Simulate streaming for cached results
-      setTimeout(() => onUpdate(JSON.stringify(cachedResult)), 100);
-      return JSON.stringify(cachedResult);
+      const response = JSON.stringify(cachedResult);
+      setTimeout(() => onUpdate(response), 100);
+      return response;
     }
 
     const prompt = this.buildItineraryPrompt(preferences);
     
     try {
-      // Use Puter AI with dynamic import to avoid build issues
-      const puter = await import('puter');
+      // Check if puter is available
+      if (!window.puter) {
+        throw new Error('Puter.js not available');
+      }
+
+      console.log('Calling Puter AI...');
       
-      const response = await puter.ai.chat(
-        prompt,
-        { model: "gpt-4o" },
-        { stream: true }
-      );
+      // Use Puter AI chat function - according to docs, no streaming but we'll simulate it
+      const response = await window.puter.ai.chat(prompt, { model: "gpt-4.1" });
       
-      let fullResponse = '';
+      console.log('Puter AI response received:', response.length, 'characters');
       
-      for await (const part of response) {
-        if (part?.text) {
-          fullResponse += part.text;
-          onUpdate(part.text);
-        }
+      // Simulate streaming by breaking response into chunks
+      const chunks = response.split(' ');
+      for (let i = 0; i < chunks.length; i++) {
+        onUpdate(chunks[i] + ' ');
+        // Small delay to simulate streaming
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
       
       // Cache the result
       try {
-        const parsedResponse = JSON.parse(fullResponse);
+        const parsedResponse = JSON.parse(response);
         this.cache.set(cacheKey, parsedResponse);
       } catch (e) {
-        // Don't cache if parsing fails
+        console.warn('Could not parse AI response for caching');
       }
       
-      return fullResponse;
+      return response;
     } catch (error) {
       console.error('Error with Puter AI:', error);
       
@@ -186,7 +193,7 @@ class AITravelService {
       "destination": "${preferences.destination}",
       "startDate": "${preferences.startDate}",
       "endDate": "${preferences.endDate}",
-      "overview": "A wonderful journey through ${preferences.destination} with carefully curated experiences tailored to your interests.",
+      "overview": "A wonderful journey through ${preferences.destination} with carefully curated experiences tailored to your ${preferences.interests.join(', ')} interests.",
       "totalBudget": "₹15,000-25,000 total",
       "tips": [
         "Book accommodations in advance for better rates",
@@ -258,7 +265,7 @@ class AITravelService {
     // Simulate streaming by yielding chunks
     const chunks = mockResponse.split(' ');
     for (let i = 0; i < chunks.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise(resolve => setTimeout(resolve, 20));
       onUpdate(chunks[i] + ' ');
     }
     
@@ -334,9 +341,9 @@ REQUIREMENTS:
   ): Promise<TravelItinerary> {
     const streamUpdate = onUpdate || (() => {});
     
-    const response = await this.streamItineraryGeneration(preferences, streamUpdate);
-    
     try {
+      const response = await this.streamItineraryGeneration(preferences, streamUpdate);
+      
       // Extract JSON from response (in case there's extra text)
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : response;
@@ -358,10 +365,6 @@ REQUIREMENTS:
     refinementRequest: string,
     onUpdate?: (chunk: string) => void
   ): Promise<TravelItinerary> {
-    if (!this.apiKey) {
-      throw new Error('API key not set. Please configure your Puter AI API key.');
-    }
-
     this.checkRateLimit();
 
     const prompt = `Modify this travel itinerary based on the user's request. Use Indian Rupees (₹) for all pricing.
@@ -377,25 +380,21 @@ Return the modified itinerary in the exact same JSON format. Only change what th
     const streamUpdate = onUpdate || (() => {});
     
     try {
-      const puter = await import('puter');
+      if (!window.puter) {
+        throw new Error('Puter.js not available');
+      }
+
+      const response = await window.puter.ai.chat(prompt, { model: "gpt-4.1" });
       
-      const response = await puter.ai.chat(
-        prompt,
-        { model: "gpt-4o" },
-        { stream: true }
-      );
-      
-      let fullResponse = '';
-      
-      for await (const part of response) {
-        if (part?.text) {
-          fullResponse += part.text;
-          streamUpdate(part.text);
-        }
+      // Simulate streaming
+      const chunks = response.split(' ');
+      for (let i = 0; i < chunks.length; i++) {
+        streamUpdate(chunks[i] + ' ');
+        await new Promise(resolve => setTimeout(resolve, 10));
       }
       
-      const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : fullResponse;
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : response;
       const refinedItinerary = JSON.parse(jsonString);
       
       return {
