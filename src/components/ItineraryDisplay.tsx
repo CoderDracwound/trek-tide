@@ -13,17 +13,23 @@ import {
   ChevronDown,
   Info,
   Share2,
-  Download
+  Download,
+  Luggage,
+  Calculator,
+  Map as MapIcon
 } from "lucide-react";
 import { TravelItinerary, TravelDay, Activity } from "@/services/aiTravelService";
+import MapImage from "@/components/MapImage";
+import ShareDialog from "@/components/ShareDialog";
+import ExportDialog from "@/components/ExportDialog";
+import PackingChecklist from "@/components/PackingChecklist";
+import BudgetBreakdown from "@/components/BudgetBreakdown";
 
 interface ItineraryDisplayProps {
   itinerary: TravelItinerary;
   onEditActivity?: (dayIndex: number, timeSlot: string, activityIndex: number, activity: Activity) => void;
   onDeleteActivity?: (dayIndex: number, timeSlot: string, activityIndex: number) => void;
   onMoveActivity?: (dayIndex: number, timeSlot: string, activityIndex: number, direction: 'up' | 'down') => void;
-  onShare?: () => void;
-  onExport?: () => void;
 }
 
 const TIME_SLOTS = [
@@ -55,11 +61,13 @@ export default function ItineraryDisplay({
   itinerary, 
   onEditActivity, 
   onDeleteActivity, 
-  onMoveActivity,
-  onShare,
-  onExport 
+  onMoveActivity
 }: ItineraryDisplayProps) {
   const [selectedDay, setSelectedDay] = useState(0);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [packingDialogOpen, setPackingDialogOpen] = useState(false);
+  const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
 
   const renderActivity = (
     activity: Activity, 
@@ -181,13 +189,21 @@ export default function ItineraryDisplay({
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={onShare}>
+              <Button variant="outline" onClick={() => setShareDialogOpen(true)}>
                 <Share2 className="w-4 h-4" />
                 Share
               </Button>
-              <Button variant="outline" onClick={onExport}>
+              <Button variant="outline" onClick={() => setExportDialogOpen(true)}>
                 <Download className="w-4 h-4" />
                 Export PDF
+              </Button>
+              <Button variant="outline" onClick={() => setPackingDialogOpen(true)}>
+                <Luggage className="w-4 h-4" />
+                Packing
+              </Button>
+              <Button variant="outline" onClick={() => setBudgetDialogOpen(true)}>
+                <Calculator className="w-4 h-4" />
+                Budget
               </Button>
             </div>
           </div>
@@ -244,37 +260,87 @@ export default function ItineraryDisplay({
       {/* Day Content */}
       <div className="container mx-auto px-4 py-8">
         {itinerary.days[selectedDay] && (
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <h2 className="heading-md mb-2">
-                Day {itinerary.days[selectedDay].day}: {itinerary.days[selectedDay].title}
-              </h2>
-              <p className="text-lg text-muted-foreground mb-4">
-                {new Date(itinerary.days[selectedDay].date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-              {itinerary.days[selectedDay].notes && (
-                <Card className="p-4 neo-shadow border-2 bg-warning/10">
-                  <p className="text-sm"><strong>📝 Note:</strong> {itinerary.days[selectedDay].notes}</p>
-                </Card>
-              )}
-            </div>
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Map Column */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-24">
+                  <Card className="p-4 neo-shadow border-2">
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
+                      <MapIcon className="w-5 h-5 text-accent" />
+                      Day {itinerary.days[selectedDay].day} Map
+                    </h3>
+                    <MapImage 
+                      locations={[
+                        ...itinerary.days[selectedDay].morning.map(a => a.location),
+                        ...itinerary.days[selectedDay].afternoon.map(a => a.location),
+                        ...itinerary.days[selectedDay].evening.map(a => a.location)
+                      ]}
+                      day={itinerary.days[selectedDay].day}
+                    />
+                  </Card>
+                </div>
+              </div>
 
-            <div className="space-y-8">
-              {TIME_SLOTS.map(timeSlot => {
-                const activities = itinerary.days[selectedDay][timeSlot.key as keyof TravelDay] as Activity[];
-                if (!activities || activities.length === 0) return null;
-                
-                return renderTimeSlot(timeSlot, selectedDay, activities);
-              })}
+              {/* Itinerary Column */}
+              <div className="lg:col-span-3">
+                <div className="mb-8">
+                  <h2 className="heading-md mb-2">
+                    Day {itinerary.days[selectedDay].day}: {itinerary.days[selectedDay].title}
+                  </h2>
+                  <p className="text-lg text-muted-foreground mb-4">
+                    {new Date(itinerary.days[selectedDay].date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  {itinerary.days[selectedDay].notes && (
+                    <Card className="p-4 neo-shadow border-2 bg-warning/10">
+                      <p className="text-sm"><strong>📝 Note:</strong> {itinerary.days[selectedDay].notes}</p>
+                    </Card>
+                  )}
+                </div>
+
+                <div className="space-y-8">
+                  {TIME_SLOTS.map(timeSlot => {
+                    const activities = itinerary.days[selectedDay][timeSlot.key as keyof TravelDay] as Activity[];
+                    if (!activities || activities.length === 0) return null;
+                    
+                    return renderTimeSlot(timeSlot, selectedDay, activities);
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      <ShareDialog 
+        itinerary={itinerary}
+        isOpen={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+      />
+      
+      <ExportDialog 
+        itinerary={itinerary}
+        isOpen={exportDialogOpen}
+        onClose={() => setExportDialogOpen(false)}
+      />
+      
+      <PackingChecklist 
+        itinerary={itinerary}
+        isOpen={packingDialogOpen}
+        onClose={() => setPackingDialogOpen(false)}
+      />
+      
+      <BudgetBreakdown 
+        itinerary={itinerary}
+        isOpen={budgetDialogOpen}
+        onClose={() => setBudgetDialogOpen(false)}
+      />
     </div>
   );
 }

@@ -154,18 +154,16 @@ export default function TravelPlannerApp() {
   };
 
   const handleShare = () => {
-    // Placeholder for sharing functionality
     toast({
-      title: "Share Feature Coming Soon! 🔗",
-      description: "We're working on making it easy to share your itinerary.",
+      title: "Share dialog opened! 🔗",
+      description: "Use the share options to send your itinerary to friends.",
     });
   };
 
   const handleExport = () => {
-    // Placeholder for PDF export functionality
     toast({
-      title: "Export Feature Coming Soon! 📄",
-      description: "PDF export will be available soon.",
+      title: "Export dialog opened! 📄", 
+      description: "Generate a PDF of your complete itinerary.",
     });
   };
 
@@ -239,8 +237,6 @@ export default function TravelPlannerApp() {
               onEditActivity={handleEditActivity}
               onDeleteActivity={handleDeleteActivity}
               onMoveActivity={handleMoveActivity}
-              onShare={handleShare}
-              onExport={handleExport}
             />
           )}
         </div>
