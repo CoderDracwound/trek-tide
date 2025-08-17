@@ -102,15 +102,32 @@ class AITravelService {
   private readonly RATE_WINDOW = 60 * 1000; // 1 minute
 
   constructor() {
-    // Check if puter is available
-    if (typeof window !== 'undefined' && !window.puter) {
-      console.warn('Puter.js not loaded. Please ensure the script tag is included in your HTML.');
+    // Wait for puter to be available
+    if (typeof window !== 'undefined') {
+      // Check if puter is already available
+      if (window.puter) {
+        console.log('Puter.js already loaded');
+      } else {
+        // Wait for the script to load
+        let attempts = 0;
+        const checkPuter = () => {
+          attempts++;
+          if (window.puter) {
+            console.log('Puter.js loaded successfully');
+          } else if (attempts < 50) { // Wait up to 5 seconds
+            setTimeout(checkPuter, 100);
+          } else {
+            console.warn('Puter.js failed to load after 5 seconds');
+          }
+        };
+        checkPuter();
+      }
     }
   }
 
   hasApiKey(): boolean {
-    // Puter doesn't require API keys according to documentation
-    return typeof window !== 'undefined' && !!window.puter;
+    // Always return true since Puter doesn't require API keys
+    return true;
   }
 
   private checkRateLimit(): boolean {
@@ -150,16 +167,24 @@ class AITravelService {
     const prompt = this.buildItineraryPrompt(preferences);
     
     try {
-      // Check if puter is available
+      // Check if puter is available with retries
       if (!window.puter) {
-        throw new Error('Puter.js not available');
+        // Wait a bit for puter to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!window.puter) {
+          throw new Error('Puter.js not available. Please refresh the page.');
+        }
       }
 
       console.log('Calling Puter AI...');
       onUpdate('Connecting to AI...');
       
-      // Use Puter AI chat function
+      // Use Puter AI chat function with error handling
       const response = await window.puter.ai.chat(prompt, { model: "gpt-4.1" });
+      
+      if (!response || typeof response !== 'string') {
+        throw new Error('Invalid response from AI service');
+      }
       
       console.log('Puter AI response received:', response.length, 'characters');
       onUpdate('Processing response...');
@@ -380,7 +405,11 @@ Return ONLY valid JSON in the exact same format. Only change what the user reque
     
     try {
       if (!window.puter) {
-        throw new Error('Puter.js not available');
+        // Wait a bit for puter to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!window.puter) {
+          throw new Error('Puter.js not available. Please refresh the page.');
+        }
       }
 
       streamUpdate('Processing your request...');
